@@ -1,14 +1,13 @@
 # If needed, install:
-# pip install streamlit pandas numpy seaborn matplotlib xgboost scikit-learn
+# pip install streamlit pandas numpy matplotlib xgboost scikit-learn joblib
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from xgboost import XGBRegressor, plot_importance
+from xgboost import XGBRegressor
 
 st.set_page_config(page_title="Crowdfunding ROI Predictor", layout="wide")
 
@@ -32,7 +31,14 @@ if uploaded_file is not None:
         # -----------------------------
         st.subheader("📌 Correlation Heatmap")
         fig, ax = plt.subplots(figsize=(10, 6))
-        sns.heatmap(df.corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
+        corr_matrix = df.corr()
+        cax = ax.matshow(corr_matrix, cmap="coolwarm")
+        fig.colorbar(cax)
+        ticks = np.arange(len(corr_matrix.columns))
+        ax.set_xticks(ticks)
+        ax.set_yticks(ticks)
+        ax.set_xticklabels(corr_matrix.columns, rotation=90)
+        ax.set_yticklabels(corr_matrix.columns)
         st.pyplot(fig)
 
         # -----------------------------
@@ -82,13 +88,13 @@ if uploaded_file is not None:
 
         # ROI Distribution
         fig, ax = plt.subplots(figsize=(8,5))
-        sns.histplot(y, kde=True, color="purple", ax=ax)
+        ax.hist(y, bins=30, color="purple", alpha=0.7)
         ax.set_title("Distribution of ROI")
         st.pyplot(fig)
 
         # Actual vs Predicted
         fig, ax = plt.subplots(figsize=(8,5))
-        sns.scatterplot(x=y_test, y=y_pred, alpha=0.6, ax=ax)
+        ax.scatter(y_test, y_pred, alpha=0.6)
         ax.set_xlabel("Actual ROI")
         ax.set_ylabel("Predicted ROI")
         ax.set_title("Actual vs Predicted ROI")
@@ -102,7 +108,8 @@ if uploaded_file is not None:
         }).sort_values(by="Importance", ascending=False)
 
         fig, ax = plt.subplots(figsize=(10,6))
-        sns.barplot(x="Importance", y="Feature", data=importance, palette="viridis", ax=ax)
+        ax.barh(importance['Feature'], importance['Importance'], color="green")
+        ax.invert_yaxis()
         ax.set_title("Feature Importance")
         st.pyplot(fig)
 
